@@ -144,6 +144,26 @@ pub fn mint_callback(
 - Homebrew LLVM for WASM compilation: `brew install llvm`
 - The PoC test is already added to `contracts/satoshi-bridge/tests/test_satoshi_bridge.rs`
 
+**Test Setup Modifications:**
+
+The following imports were added to the top of `contracts/satoshi-bridge/tests/test_satoshi_bridge.rs` (lines 1–8) to support the PoC:
+
+```rust
+mod setup;
+use bitcoin::{Amount, OutPoint, TxOut};
+use near_sdk::serde_json::json;
+use near_sdk::{AccountId, Gas, NearToken};
+use satoshi_bridge::network::{Address, Chain};
+use satoshi_bridge::{
+    DepositMsg, PendingInfoState, PostAction, SafeDepositMsg, TokenReceiverMessage,
+};
+```
+
+Key additions over the original test file:
+- `near_sdk::serde_json::json` — needed for constructing JSON arguments to contract calls (`args_json!(...)`)
+- `near_sdk::{AccountId, Gas, NearToken}` — needed for gas/token amount types in deposit calls
+- `SafeDepositMsg` added to the `satoshi_bridge` import — the struct used to trigger the `safe_verify_deposit` path
+
 **Build the WASM (required for near-workspaces sandbox):**
 
 ```bash

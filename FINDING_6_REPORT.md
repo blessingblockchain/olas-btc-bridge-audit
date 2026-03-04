@@ -144,9 +144,9 @@ pub fn mint_callback(
 - Homebrew LLVM for WASM compilation: `brew install llvm`
 - The PoC test is already added to `contracts/satoshi-bridge/tests/test_satoshi_bridge.rs`
 
-**Test Setup Modifications:**
+**Test Suite Setup (shared by all finding PoCs — Findings 4, 5, and 6):**
 
-The following imports were added to the top of `contracts/satoshi-bridge/tests/test_satoshi_bridge.rs` (lines 1–8) to support the PoC:
+The following imports are at the top of `contracts/satoshi-bridge/tests/test_satoshi_bridge.rs` (lines 1–8). These are shared by all finding PoCs and extend the existing test infrastructure:
 
 ```rust
 mod setup;
@@ -160,9 +160,12 @@ use satoshi_bridge::{
 ```
 
 Key additions over the original test file:
-- `near_sdk::serde_json::json` — needed for constructing JSON arguments to contract calls (`args_json!(...)`)
-- `near_sdk::{AccountId, Gas, NearToken}` — needed for gas/token amount types in deposit calls
-- `SafeDepositMsg` added to the `satoshi_bridge` import — the struct used to trigger the `safe_verify_deposit` path
+- `near_sdk::serde_json::json` — constructing JSON arguments for direct contract calls (`args_json!(...)`) when the test needs to bypass the helper methods (e.g., to control gas limits)
+- `near_sdk::{AccountId, Gas, NearToken}` — `Gas` is used by Finding 4's PoC to attach a controlled gas budget (`Gas::from_tgas(75)`) instead of `.max_gas()`; `NearToken` for deposit amounts; `AccountId` for type conversions
+- `SafeDepositMsg` added to the `satoshi_bridge` import — the struct used to trigger the `safe_verify_deposit` path (Finding 6)
+- `PendingInfoState` — used by Finding 4's PoC to verify pending info is stuck in `PendingBurn`
+
+All PoCs use the project's own `near-workspaces` sandbox infrastructure with real deployed contracts (no mocks or stubs). The setup module (`tests/setup/`) provides `Context`, helper macros (`check!`), and transaction builders (`generate_transaction_bytes`, `generate_tx_out`). See `tests/setup/context.rs` for the full sandbox deployment (bridge contract, nBTC contract, mock light client, mock chain signatures).
 
 **Build the WASM (required for near-workspaces sandbox):**
 
